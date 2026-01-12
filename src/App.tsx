@@ -1,41 +1,69 @@
-import {useEffect} from "react";
+import {useEffect, useState, type JSX} from "react";
 import WebApp from "@twa-dev/sdk";
-import "./App.css";
 
-function App() {
-	useEffect(() => {
-		// Telegram Web App-ni tayyorlash
+interface OrderData {
+	item: string;
+	color: string;
+	date: string;
+}
+
+function App(): JSX.Element {
+	const [selectedColor, setSelectedColor] = useState<string | null>(null);
+
+	useEffect((): void => {
 		WebApp.ready();
 	}, []);
 
-	const sendOrder = (color: string) => {
-		const data = {
+	const handleConfirm = (): void => {
+		if (!selectedColor) return;
+
+		const orderData: OrderData = {
 			item: "Futbolka",
-			color: color,
+			color: selectedColor,
 			date: new Date().toLocaleDateString(),
 		};
 
-		// Botga JSON string ko'rinishida yuboramiz
-		WebApp.sendData(JSON.stringify(data));
+		WebApp.sendData(JSON.stringify(orderData));
 	};
 
-	return (
-		<div style={{padding: "20px", textAlign: "center"}}>
-			<h1>Kiyim do'koni</h1>
-			<p>Rangni tanlang:</p>
+	useEffect((): (() => void) | void => {
+		if (selectedColor) {
+			WebApp.MainButton.setText(`TANLANDI: ${selectedColor.toUpperCase()}`);
+			WebApp.MainButton.show();
+			WebApp.MainButton.onClick(handleConfirm);
 
-			<div style={{display: "flex", gap: "10px", justifyContent: "center"}}>
-				<button
-					onClick={() => sendOrder("Qizil")}
-					style={{background: "red", color: "white"}}>
-					Qizil
-				</button>
-				<button
-					onClick={() => sendOrder("Ko'k")}
-					style={{background: "blue", color: "white"}}>
-					Ko'k
-				</button>
+			return () => {
+				WebApp.MainButton.offClick(handleConfirm);
+			};
+		}
+	}, [selectedColor]);
+
+	const colors: string[] = ["Qizil", "Ko'k", "Yashil", "Sariq"];
+
+	return (
+		<div className="min-h-screen bg-gray-100 p-6 flex flex-col items-center">
+			<h1 className="text-2xl font-bold text-gray-800 mb-6">Kiyim Do'koni</h1>
+
+			<div className="grid grid-cols-2 gap-4 w-full max-w-sm">
+				{colors.map((color: string) => (
+					<button
+						key={color}
+						onClick={() => setSelectedColor(color)}
+						className={`p-4 rounded-xl border-2 transition-all font-semibold ${
+							selectedColor === color
+								? "border-blue-500 bg-blue-50 text-blue-600 shadow-md"
+								: "border-white bg-white text-gray-600"
+						}`}>
+						{color}
+					</button>
+				))}
 			</div>
+
+			{selectedColor && (
+				<p className="mt-6 text-sm text-gray-500 italic">
+					Tanlovni tasdiqlash uchun pastdagi Telegram tugmasini bosing
+				</p>
+			)}
 		</div>
 	);
 }
