@@ -1,71 +1,60 @@
-import {useEffect, useState, type JSX} from "react";
+import {useEffect, useState} from "react";
 import WebApp from "@twa-dev/sdk";
 
-interface OrderData {
-	item: string;
-	color: string;
-	date: string;
-}
-
-function App(): JSX.Element {
+const App = () => {
 	const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
-	useEffect((): void => {
+	useEffect(() => {
 		WebApp.ready();
+		WebApp.expand();
 	}, []);
 
-	const handleConfirm = (): void => {
-		if (!selectedColor) return;
+	const handleConfirm = () => {
+		if (selectedColor) {
+			const orderData = {
+				item: "Futbolka",
+				color: selectedColor,
+			};
 
-		const orderData: OrderData = {
-			item: "Futbolka",
-			color: selectedColor,
-			date: new Date().toLocaleDateString(),
-		};
-
-		WebApp.sendData(JSON.stringify(orderData));
+			WebApp.sendData(JSON.stringify(orderData));
+		}
 	};
 
-	useEffect((): (() => void) | void => {
+	useEffect(() => {
 		if (selectedColor) {
-			WebApp.MainButton.setText(`TANLANDI: ${selectedColor.toUpperCase()}`);
+			WebApp.MainButton.setText(`TANLANDI: ${selectedColor}`);
 			WebApp.MainButton.show();
 			WebApp.MainButton.onClick(handleConfirm);
-
-			return () => {
-				WebApp.MainButton.offClick(handleConfirm);
-			};
 		}
+		return () => {
+			WebApp.MainButton.offClick(handleConfirm);
+		};
 	}, [selectedColor]);
 
-	const colors: string[] = ["Qizil", "Ko'k", "Yashil", "Sariq"];
-
 	return (
-		<div className="min-h-screen bg-gray-100 p-6 flex flex-col items-center">
-			<h1 className="text-2xl font-bold text-gray-800 mb-6">Kiyim Do'koni</h1>
+		<div className="min-h-screen bg-slate-50 p-4 font-sans text-slate-900">
+			<div className="max-w-md mx-auto space-y-6 text-center">
+				<h1 className="text-3xl font-extrabold tracking-tight text-slate-800">
+					Kiyim Do'koni
+				</h1>
 
-			<div className="grid grid-cols-2 gap-4 w-full max-w-sm">
-				{colors.map((color: string) => (
-					<button
-						key={color}
-						onClick={() => setSelectedColor(color)}
-						className={`p-4 rounded-xl border-2 transition-all font-semibold ${
-							selectedColor === color
-								? "border-blue-500 bg-blue-50 text-blue-600 shadow-md"
-								: "border-white bg-white text-gray-600"
-						}`}>
-						{color}
-					</button>
-				))}
+				<div className="grid grid-cols-2 gap-3">
+					{["Qizil", "Ko'k", "Yashil", "Sariq"].map((color) => (
+						<button
+							key={color}
+							onClick={() => setSelectedColor(color)}
+							className={`py-4 px-6 rounded-2xl font-bold transition-all transform active:scale-95 ${
+								selectedColor === color
+									? "bg-blue-600 text-white shadow-lg ring-2 ring-blue-400 ring-offset-2"
+									: "bg-white text-slate-600 border border-slate-200 shadow-sm hover:bg-slate-50"
+							}`}>
+							{color}
+						</button>
+					))}
+				</div>
 			</div>
-
-			{selectedColor && (
-				<p className="mt-6 text-sm text-gray-500 italic">
-					Tanlovni tasdiqlash uchun pastdagi Telegram tugmasini bosing
-				</p>
-			)}
 		</div>
 	);
-}
+};
 
 export default App;
